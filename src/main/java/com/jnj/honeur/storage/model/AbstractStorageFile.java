@@ -24,6 +24,10 @@ public abstract class AbstractStorageFile {
         return fileInfo.getUuid();
     }
 
+    public String getKey() {
+        return fileInfo.getKey();
+    }
+
     public String getOriginalFilename() {
         return fileInfo.getOriginalFilename();
     }

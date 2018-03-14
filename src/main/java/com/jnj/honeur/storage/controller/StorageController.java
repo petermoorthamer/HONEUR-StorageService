@@ -1,7 +1,9 @@
 package com.jnj.honeur.storage.controller;
 
+import com.jnj.honeur.security.SecurityUtils2;
 import com.jnj.honeur.storage.exception.StorageException;
 import com.jnj.honeur.storage.model.*;
+import com.jnj.honeur.storage.service.StorageLogService;
 import com.jnj.honeur.storage.service.StorageService;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
@@ -42,12 +44,14 @@ public class StorageController {
     private static final Logger LOGGER = LoggerFactory.getLogger(StorageController.class);
 
     private StorageService storageService;
+    private StorageLogService storageLogService;
 
     @Value("${amazon.s3.bucketName}")
     private String bucketName;
 
-    public StorageController(@Autowired StorageService storageService) {
+    public StorageController(@Autowired StorageService storageService, @Autowired StorageLogService storageLogService) {
         this.storageService = storageService;
+        this.storageLogService = storageLogService;
     }
 
     @RequestMapping("/home")
@@ -57,11 +61,12 @@ public class StorageController {
 
     @RequestMapping("/test")
     public String test(HttpServletRequest request, Model model) {
-        //final Subject subject = SecurityUtils.getSubject();
-        //model.addAttribute("subjectName", SecurityUtils2.getSubjectName(subject));
+        final Subject subject = SecurityUtils.getSubject();
+        model.addAttribute("subjectName", SecurityUtils2.getSubjectName(subject));
         model.addAttribute("bucketName", bucketName);
         model.addAttribute("allFileKeys", storageService.getAllStorageFileKeys());
         model.addAttribute("cohortDefinitions", storageService.getMatchingStorageFileKeys(CohortDefinitionFile.class, ""));
+        model.addAttribute("storageLog", storageLogService.findAll());
         return "storage";
     }
 
@@ -69,8 +74,9 @@ public class StorageController {
     public ResponseEntity<Object> downloadFile(@RequestParam String fileKey)  {
         try {
             final AbstractStorageFile storageFile = storageService.getStorageFileWithKey(fileKey);
+            logStorageAction(StorageLogEntry.Action.DOWNLOAD, storageFile);
             return createResponse(storageFile);
-        } catch (IOException e) {
+        } catch (StorageException | IOException e) {
             LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>("The file cannot be downloaded!", new HttpHeaders(), HttpStatus.NOT_FOUND);
         }
@@ -80,6 +86,7 @@ public class StorageController {
     public ResponseEntity<Object> deleteFile(@RequestParam String fileKey)  {
         try {
             storageService.deleteStorageFile(fileKey);
+            logStorageAction(StorageLogEntry.Action.DELETE, fileKey);
             return ResponseEntity.noContent().build();
         } catch (StorageException e) {
             LOGGER.error(e.getMessage(), e);
@@ -91,8 +98,9 @@ public class StorageController {
     public ResponseEntity<Object> getStorageFile(@PathVariable String uuid)  {
         try {
             final AbstractStorageFile storageFile = storageService.getStorageFileWithUuid(uuid);
+            logStorageAction(StorageLogEntry.Action.DOWNLOAD, storageFile);
             return createResponse(storageFile);
-        } catch (IOException e) {
+        } catch (StorageException | IOException e) {
             LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>("The cohort definition cannot be downloaded!", new HttpHeaders(), HttpStatus.NOT_FOUND);
         }
@@ -112,8 +120,9 @@ public class StorageController {
                     new StorageFileInfo(cohortDefinitionUuid, file.getOriginalFilename()),
                     createTempFile(file));
             storageService.saveStorageFile(cohortDefinitionFile);
+            logStorageAction(StorageLogEntry.Action.UPLOAD, cohortDefinitionFile);
             return ResponseEntity.created(new URI("/cohort-definitions/" + uuid)).build();
-        } catch (IOException | URISyntaxException e) {
+        } catch (StorageException | IOException | URISyntaxException e) {
             LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>("The cohort definition cannot be saved!", new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -126,8 +135,9 @@ public class StorageController {
 
         try {
             final CohortDefinitionFile cohortDefinitionFile = storageService.getStorageFile(CohortDefinitionFile.class, uuid);
+            logStorageAction(StorageLogEntry.Action.DOWNLOAD, cohortDefinitionFile);
             return createResponse(cohortDefinitionFile);
-        } catch (IOException e) {
+        } catch (StorageException | IOException e) {
             LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>("The cohort definition cannot be downloaded!", new HttpHeaders(), HttpStatus.NOT_FOUND);
         }
@@ -153,8 +163,9 @@ public class StorageController {
                     new StorageFileInfo(cohortResultsUuid, file.getOriginalFilename()),
                     createTempFile(file));
             storageService.saveStorageFile(cohortInclusionResultsFile);
+            logStorageAction(StorageLogEntry.Action.UPLOAD, cohortInclusionResultsFile);
             return ResponseEntity.created(new URI(buildPath("/cohort-results/", cohortDefinitionUuid, cohortResultsUuid))).build();
-        } catch (IOException | URISyntaxException e) {
+        } catch (StorageException | IOException | URISyntaxException e) {
             LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>("The cohort inclusion result cannot be saved!", new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -166,8 +177,9 @@ public class StorageController {
 
         try {
             final CohortInclusionResultsFile cohortInclusionResultsFile = storageService.getStorageFile(CohortInclusionResultsFile.class, cohortDefinitionUuid, cohortResultsUuid);
+            logStorageAction(StorageLogEntry.Action.DOWNLOAD, cohortInclusionResultsFile);
             return createResponse(cohortInclusionResultsFile);
-        } catch (IOException e) {
+        } catch (StorageException | IOException e) {
             LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>("The cohort inclusion result cannot be downloaded!", new HttpHeaders(), HttpStatus.NOT_FOUND);
         }
@@ -193,8 +205,9 @@ public class StorageController {
                     new StorageFileInfo(uuid, file.getOriginalFilename()),
                     createTempFile(file));
             storageService.saveStorageFile(notebookFile);
+            logStorageAction(StorageLogEntry.Action.UPLOAD, notebookFile);
             return ResponseEntity.created(new URI("/notebooks/" + studyId + "/ " + uuid)).build();
-        } catch (IOException | URISyntaxException e) {
+        } catch (StorageException | IOException | URISyntaxException e) {
             LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>("The notebook cannot be saved!", new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -206,8 +219,9 @@ public class StorageController {
 
         try {
             final NotebookFile notebookFile = storageService.getStorageFile(NotebookFile.class, studyId, notebookUuid);
+            logStorageAction(StorageLogEntry.Action.DOWNLOAD, notebookFile);
             return createResponse(notebookFile);
-        } catch (IOException e) {
+        } catch (StorageException | IOException e) {
             LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>("The notebook cannot be downloaded!", new HttpHeaders(), HttpStatus.NOT_FOUND);
         }
@@ -234,8 +248,9 @@ public class StorageController {
                     new StorageFileInfo(uuid, file.getOriginalFilename()),
                     createTempFile(file));
             storageService.saveStorageFile(notebookResultsFile);
+            logStorageAction(StorageLogEntry.Action.UPLOAD, notebookResultsFile);
             return ResponseEntity.created(new URI(buildPath("/notebook-results", studyId, notebookUuid, uuid))).build();
-        } catch (IOException | URISyntaxException e) {
+        } catch (StorageException | IOException | URISyntaxException e) {
             LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>("The notebook cannot be saved!", new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -246,9 +261,10 @@ public class StorageController {
         final Subject subject = SecurityUtils.getSubject();
 
         try {
-            final NotebookFile notebookFile = storageService.getStorageFile(NotebookFile.class, studyId, notebookUuid);
-            return createResponse(notebookFile);
-        } catch (IOException e) {
+            final NotebookResultsFile notebookResultsFile = storageService.getStorageFile(NotebookResultsFile.class, studyId, notebookUuid, notebookResultUuid);
+            logStorageAction(StorageLogEntry.Action.DOWNLOAD, notebookResultsFile);
+            return createResponse(notebookResultsFile);
+        } catch (StorageException | IOException e) {
             LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>("The notebook cannot be downloaded!", new HttpHeaders(), HttpStatus.NOT_FOUND);
         }
@@ -291,6 +307,20 @@ public class StorageController {
         File tmpFile = StorageService.createTempFile(file.getOriginalFilename());
         file.transferTo(tmpFile);
         return tmpFile;
+    }
+
+    private void logStorageAction(StorageLogEntry.Action action, AbstractStorageFile storageFile) {
+        final String user = SecurityUtils2.getSubjectName(SecurityUtils.getSubject());
+        storageLogService.save(new StorageLogEntry(user, action, storageFile));
+    }
+
+    private void logStorageAction(StorageLogEntry.Action action, String fileKey) {
+        final StorageLogEntry logEntry = new StorageLogEntry();
+        final String user = SecurityUtils2.getSubjectName(SecurityUtils.getSubject());
+        logEntry.setUser(user);
+        logEntry.setAction(action);
+        logEntry.setStorageFileKey(fileKey);
+        storageLogService.save(logEntry);
     }
 
 }

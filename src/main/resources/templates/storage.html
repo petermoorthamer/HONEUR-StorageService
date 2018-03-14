@@ -21,7 +21,7 @@
     <div class="container">
         <small><img src="/img/HONEUR_logo.png" alt="HONEUR" width="200"/> Haematology Outcomes Network Europe</small>
         <small class="text-right">
-            <span th:text="'Welcome, ' + ${subjectName}"></span>
+            &nbsp; <span th:text="'Welcome, ' + ${subjectName}"></span>
         </small>
     </div>
 </nav>
@@ -43,8 +43,6 @@
 
     <p th:if="${cohortDefinitions.empty}">No cohort definitions</p>
 
-    <p><br/></p>
-
 </div>
 
 <div class="container">
@@ -61,10 +59,42 @@
         </table>
     </form>
 
-    <p><br/></p>
-
 </div>
 
+
+
+
+
+<div class="container">
+
+    <h3>Storage Log</h3>
+
+    <table class="table" th:object="${storageLog}" id="storageLogTable" th:if="${!storageLog.empty}">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Action</th>
+                <th>Data/Time</th>
+                <th>File type</th>
+                <th>File name</th>
+                <th>File UUID</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="storageLogEntry :${storageLog}">
+                <td th:text="${storageLogEntry.user}"></td>
+                <td th:text="${storageLogEntry.action}"></td>
+                <td th:text="${storageLogEntry.dateTime}"></td>
+                <td th:text="${storageLogEntry.storageFileClass}"></td>
+                <td th:text="${storageLogEntry.storageFileName}"></td>
+                <td th:text="${storageLogEntry.storageFileUuid}"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p th:if="${storageLog.empty}">Empty storage log</p>
+
+</div>
 
 <div class="container">
 
