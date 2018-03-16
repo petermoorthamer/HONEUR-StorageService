@@ -3,6 +3,7 @@ package com.jnj.honeur.storage.controller;
 import com.jnj.honeur.security.SecurityUtils2;
 import com.jnj.honeur.storage.exception.StorageException;
 import com.jnj.honeur.storage.model.*;
+import com.jnj.honeur.storage.service.AmazonS3StorageKeyBuilder;
 import com.jnj.honeur.storage.service.StorageLogService;
 import com.jnj.honeur.storage.service.StorageService;
 import org.apache.shiro.SecurityUtils;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
@@ -49,6 +51,9 @@ public class StorageController {
     @Value("${amazon.s3.bucketName}")
     private String bucketName;
 
+    @Autowired()
+    private RequestMappingHandlerMapping requestMappingHandlerMapping;
+
     public StorageController(@Autowired StorageService storageService, @Autowired StorageLogService storageLogService) {
         this.storageService = storageService;
         this.storageLogService = storageLogService;
@@ -57,6 +62,14 @@ public class StorageController {
     @RequestMapping("/home")
     public String home() {
         return "index";
+    }
+
+    @RequestMapping("/api")
+    public @ResponseBody Object showEndpointsAction() {
+        return requestMappingHandlerMapping.getHandlerMethods().keySet().stream().map(t ->
+                (t.getMethodsCondition().getMethods().size() == 0 ? "GET" : t.getMethodsCondition().getMethods().toArray()[0]) + " " +
+                        t.getPatternsCondition().getPatterns().toArray()[0]
+        ).toArray();
     }
 
     @RequestMapping("/test")
@@ -319,6 +332,7 @@ public class StorageController {
         final String user = SecurityUtils2.getSubjectName(SecurityUtils.getSubject());
         logEntry.setUser(user);
         logEntry.setAction(action);
+        logEntry.setStorageFileUuid(new AmazonS3StorageKeyBuilder().getUuid(fileKey));
         logEntry.setStorageFileKey(fileKey);
         storageLogService.save(logEntry);
     }

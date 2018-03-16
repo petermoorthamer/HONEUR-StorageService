@@ -34,7 +34,9 @@ public class StorageLogEntry {
     @Column(name = "storage_date_time", nullable = false)
     private ZonedDateTime dateTime;
 
-    public StorageLogEntry() {}
+    public StorageLogEntry() {
+        this.dateTime = ZonedDateTime.now();
+    }
 
     public StorageLogEntry(String user, Action action, AbstractStorageFile storageFile) {
         this.user = user;
