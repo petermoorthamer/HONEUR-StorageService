@@ -26,9 +26,13 @@ public abstract class StorageService {
 
     public abstract <T extends AbstractStorageFile> T getStorageFile(Class<T> clazz, String... prefixes) throws StorageException;
 
-    public abstract List<StorageFileInfo> getAllStorageFileKeys();
+    public abstract List<StorageFileInfo> getAllStorageFileInfo();
 
-    public abstract List<StorageFileInfo> getMatchingStorageFileKeys(Class<? extends AbstractStorageFile> clazz, String... prefixes);
+    public abstract StorageFileInfo getStorageFileInfoByUuid(String uuid);
+
+    public abstract <T extends AbstractStorageFile> StorageFileInfo getStorageFileInfoByUuid(Class<T> clazz, String uuid);
+
+    public abstract List<StorageFileInfo> getMatchingStorageFileInfo(Class<? extends AbstractStorageFile> clazz, String... prefixes);
 
     public abstract <T extends AbstractStorageFile> Collection<T> getAllStorageFiles(Class<T> clazz, String... prefixes) throws StorageException;
 

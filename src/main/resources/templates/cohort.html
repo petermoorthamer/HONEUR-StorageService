@@ -34,11 +34,30 @@
     <h3>Cohort definitions</h3>
 
     <table class="table" th:object="${cohortDefinitions}" id="objectSummaryTable" th:if="${!cohortDefinitions.empty}">
-        <tr th:each="cohortDefinition :${cohortDefinitions}">
-            <td>
-                <a th:href="@{'/file/' + ${cohortDefinition.uuid}}" th:text="${cohortDefinition.originalFilename} + ' (' + ${cohortDefinition.uuid} + ')'"></a>
-            </td>
-        </tr>
+        <thead>
+            <tr>
+                <th>Filename</th>
+                <th>UUID</th>
+                <th>Download</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="cohortDefinition :${cohortDefinitions}">
+                <td>
+                    <span th:text="${cohortDefinition.originalFilename}"></span>
+                </td>
+                <td>
+                    <span th:text="${cohortDefinition.uuid}"></span>
+                </td>
+                <td>
+                    <a th:href="@{'/file/' + ${cohortDefinition.uuid}}" th:text="Download"></a>
+                </td>
+                <td>
+                    <a th:href="@{'/testCohortResults?cohortDefinitionUuid=' + ${cohortDefinition.uuid}}" th:text="Details"></a>
+                </td>
+            </tr>
+        </tbody>
     </table>
 
     <p th:if="${cohortDefinitions.empty}">No cohort definitions</p>
@@ -60,9 +79,6 @@
     </form>
 
 </div>
-
-
-
 
 
 <div class="container">
@@ -93,27 +109,6 @@
     </table>
 
     <p th:if="${storageLog.empty}">Empty storage log</p>
-
-</div>
-
-<div class="container">
-
-    <h3>All files</h3>
-
-    <table class="table" th:object="${allFileKeys}" id="allFileKeysTable" th:if="${!allFileKeys.empty}">
-        <tr th:each="fileinfo :${allFileKeys}">
-            <td>
-                <a th:href="@{'/file?fileKey=' + ${fileinfo.key}}" th:text="${fileinfo.originalFilename}"></a>
-            </td>
-            <td>
-                <form th:action="@{'/file?fileKey=' + ${fileinfo.key}}" th:method="delete">
-                    <input type="submit" value="Delete" />
-                </form>
-            </td>
-        </tr>
-    </table>
-
-    <p th:if="${allFileKeys.empty}">Empty bucket</p>
 
     <p><br/></p>
 

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta name="description" content=""/>
+    <meta name="author" content=""/>
+
+    <title>HONEUR - Storage Service</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+        <small><img src="/img/HONEUR_logo.png" alt="HONEUR" width="200"/> Haematology Outcomes Network Europe</small>
+        <small class="text-right">
+            &nbsp; <span th:text="'Welcome, ' + ${subjectName}"></span>
+        </small>
+    </div>
+</nav>
+
+<!-- Page Content -->
+<div class="container">
+
+    <h2>Notebook</h2>
+
+    <p th:text="'Notebook UUID: ' + ${notebookUuid}"></p>
+
+    <h3>Results</h3>
+
+    <table class="table" th:object="${notebookResults}" id="notebookTable" th:if="${!notebookResults.empty}">
+        <thead>
+            <tr>
+                <th>Filename</th>
+                <th>UUID</th>
+                <th>Download</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="notebookResult :${notebookResults}">
+                <td>
+                    <span th:text="${notebookResult.originalFilename}"></span>
+                </td>
+                <td>
+                    <span th:text="${notebookResult.uuid}"></span>
+                </td>
+                <td>
+                    <a th:href="@{'/file/' + ${notebookResult.uuid}}" th:text="Download"></a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p th:if="${notebookResults.empty}">No notebook results</p>
+
+</div>
+
+<div class="container">
+
+    <h4>Upload notebook result</h4>
+
+    <p>Upload a notebook result file and store it via HSS</p>
+
+    <form method="POST" enctype="multipart/form-data" th:action="@{'/notebook-results/' + ${notebookUuid}}">
+        <table width="200">
+            <tr>
+                <td>File:</td>
+                <td><input type="file" name="file" /></td>
+                <td><input type="submit" value="Upload" /></td>
+            </tr>
+        </table>
+    </form>
+
+</div>
+
+<div class="container">
+
+    <h3>Storage Log</h3>
+
+    <table class="table" th:object="${storageLog}" id="storageLogTable" th:if="${!storageLog.empty}">
+        <thead>
+        <tr>
+            <th>User</th>
+            <th>Action</th>
+            <th>Data/Time</th>
+            <th>File type</th>
+            <th>File name</th>
+            <th>File UUID</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="storageLogEntry :${storageLog}">
+            <td th:text="${storageLogEntry.user}"></td>
+            <td th:text="${storageLogEntry.action}"></td>
+            <td th:text="${storageLogEntry.dateTime}"></td>
+            <td th:text="${storageLogEntry.storageFileClass}"></td>
+            <td th:text="${storageLogEntry.storageFileName}"></td>
+            <td th:text="${storageLogEntry.storageFileUuid}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <p th:if="${storageLog.empty}">Empty storage log</p>
+
+    <p><a href="/testStudy">Back</a></p>
+
+</div>
+
+<!-- Footer -->
+<footer class="py-5">
+    <div class="container">
+        <p class="text-center">Copyright &copy; HONEUR 2018</p>
+    </div>
+    <!-- /.container -->
+</footer>
+
+</body>
+</html>

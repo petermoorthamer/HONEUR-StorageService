@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Amazon S3 implementation of the HONEUR {@link StorageService}
@@ -97,13 +98,32 @@ public class AmazonS3StorageService extends StorageService {
     }
 
     @Override
-    public List<StorageFileInfo> getAllStorageFileKeys() {
-        return getKeys(null);
+    public List<StorageFileInfo> getAllStorageFileInfo() {
+        return getStorageFileInfo(null);
     }
 
     @Override
-    public List<StorageFileInfo> getMatchingStorageFileKeys(Class<? extends AbstractStorageFile> clazz, String... prefixes) {
-        return getKeys(storageKeyBuilder.buildKey(clazz, prefixes));
+    public <T extends AbstractStorageFile> StorageFileInfo getStorageFileInfoByUuid(Class<T> clazz, String uuid) {
+        List<StorageFileInfo> storageFileInfoList = getStorageFileInfo(storageKeyBuilder.buildKey(clazz, ""));
+        Optional<StorageFileInfo> storageFileInfo = findByUuid(storageFileInfoList, uuid);
+        return storageFileInfo.orElse(null);
+    }
+
+    @Override
+    public StorageFileInfo getStorageFileInfoByUuid(String uuid) {
+        return findByUuid(getAllStorageFileInfo(), uuid).orElse(null);
+    }
+
+    Optional<StorageFileInfo> findByUuid(final List<StorageFileInfo> storageFileInfoList, final String uuid) {
+        return storageFileInfoList
+                .stream()
+                .filter(fileInfo -> fileInfo.getUuid().equals(uuid))
+                .findFirst();
+    }
+
+    @Override
+    public List<StorageFileInfo> getMatchingStorageFileInfo(Class<? extends AbstractStorageFile> clazz, String... prefixes) {
+        return getStorageFileInfo(storageKeyBuilder.buildKey(clazz, prefixes));
     }
 
     @Override
@@ -111,7 +131,7 @@ public class AmazonS3StorageService extends StorageService {
         return downloadFiles(clazz, storageKeyBuilder.buildKey(clazz, prefixes));
     }
 
-    private List<StorageFileInfo> getKeys(String prefix) {
+    private List<StorageFileInfo> getStorageFileInfo(String prefix) {
         ListObjectsV2Result result;
         if(StringUtils.isNotBlank(prefix)) {
             result = amazonS3Service.getObjects(bucketName, prefix);

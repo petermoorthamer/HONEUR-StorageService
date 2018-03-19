@@ -48,6 +48,13 @@ public class StorageLogEntry {
         this.dateTime = ZonedDateTime.now();
     }
 
+    public static StorageLogEntry createProbe(Class<? extends AbstractStorageFile> clazz) {
+        final StorageLogEntry probe = new StorageLogEntry();
+        probe.setDateTime(null);
+        probe.setStorageFileClass(clazz.getSimpleName());
+        return probe;
+    }
+
     public Long getId() {
         return id;
     }

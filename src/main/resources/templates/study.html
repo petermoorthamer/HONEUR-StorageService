@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta name="description" content=""/>
+    <meta name="author" content=""/>
+
+    <title>HONEUR - Storage Service</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+        <small><img src="/img/HONEUR_logo.png" alt="HONEUR" width="200"/> Haematology Outcomes Network Europe</small>
+        <small class="text-right">
+            &nbsp; <span th:text="'Welcome, ' + ${subjectName}"></span>
+        </small>
+    </div>
+</nav>
+
+<!-- Page Content -->
+<div class="container">
+
+    <h2>Study XYZ</h2>
+
+    <p>UUID: 9a915138-903b-4515-96a3-87d2efba799e</p>
+
+    <h3>Notebooks</h3>
+
+    <table class="table" th:object="${notebooks}" id="notebookTable" th:if="${!notebooks.empty}">
+        <tr th:each="notebook :${notebooks}">
+            <td>
+                <span th:text="${notebook.originalFilename} + ' (' + ${notebook.uuid} + ')'"></span>
+            </td>
+            <td>
+                <a th:href="@{'/file/' + ${notebook.uuid}}" th:text="Download"></a>
+            </td>
+            <td>
+                <a th:href="@{'/testNotebook?notebookUuid=' + ${notebook.uuid}}" th:text="Details"></a>
+            </td>
+        </tr>
+    </table>
+
+    <p th:if="${notebooks.empty}">No notebooks</p>
+
+</div>
+
+<div class="container">
+
+    <h4>Upload notebook</h4>
+
+    <p>Upload a notebook JSON file and store it via HSS</p>
+
+    <form method="POST" enctype="multipart/form-data" th:action="@{'/notebooks/9a915138-903b-4515-96a3-87d2efba799e'}">
+        <table width="400">
+            <tr>
+                <td>File:</td>
+                <td><input type="file" name="file" /></td>
+                <td><input type="submit" value="Upload" /></td>
+            </tr>
+        </table>
+    </form>
+
+</div>
+
+
+<div class="container">
+
+    <h4>Upload notebook from Zeppelin</h4>
+
+    <p>Download a notebook from Zeppelin and store it via HSS</p>
+
+    <form method="POST" th:action="@{'/notebooks/zeppelin/9a915138-903b-4515-96a3-87d2efba799e'}">
+        <table width="400">
+            <tr>
+                <td>Zeppelin notebook ID:</td>
+                <td><input type="text" name="zeppelinNotebookId" /></td>
+                <td><input type="submit" value="Store" /></td>
+            </tr>
+        </table>
+    </form>
+
+</div>
+
+
+
+
+
+<div class="container">
+
+    <h3>Storage Log</h3>
+
+    <table class="table" th:object="${storageLog}" id="storageLogTable" th:if="${!storageLog.empty}">
+        <thead>
+        <tr>
+            <th>User</th>
+            <th>Action</th>
+            <th>Data/Time</th>
+            <th>File type</th>
+            <th>File name</th>
+            <th>File UUID</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="storageLogEntry :${storageLog}">
+            <td th:text="${storageLogEntry.user}"></td>
+            <td th:text="${storageLogEntry.action}"></td>
+            <td th:text="${storageLogEntry.dateTime}"></td>
+            <td th:text="${storageLogEntry.storageFileClass}"></td>
+            <td th:text="${storageLogEntry.storageFileName}"></td>
+            <td th:text="${storageLogEntry.storageFileUuid}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <p th:if="${storageLog.empty}">Empty storage log</p>
+
+</div>
+
+<!-- Footer -->
+<footer class="py-5">
+    <div class="container">
+        <p class="text-center">Copyright &copy; HONEUR 2018</p>
+    </div>
+    <!-- /.container -->
+</footer>
+
+</body>
+</html>

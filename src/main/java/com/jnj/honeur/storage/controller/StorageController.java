@@ -3,9 +3,7 @@ package com.jnj.honeur.storage.controller;
 import com.jnj.honeur.security.SecurityUtils2;
 import com.jnj.honeur.storage.exception.StorageException;
 import com.jnj.honeur.storage.model.*;
-import com.jnj.honeur.storage.service.AmazonS3StorageKeyBuilder;
-import com.jnj.honeur.storage.service.StorageLogService;
-import com.jnj.honeur.storage.service.StorageService;
+import com.jnj.honeur.storage.service.*;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
@@ -25,6 +23,8 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -45,18 +45,31 @@ public class StorageController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StorageController.class);
 
+    private static final String TEST_STUDY_UUID = "9a915138-903b-4515-96a3-87d2efba799e";
+
     private StorageService storageService;
     private StorageLogService storageLogService;
+    private ZeppelinRestClient zeppelinRestClient;
+    private MailService mailService;
 
     @Value("${amazon.s3.bucketName}")
     private String bucketName;
 
+    @Value("${shiro.server}")
+    private String serverName;
+
     @Autowired()
     private RequestMappingHandlerMapping requestMappingHandlerMapping;
 
-    public StorageController(@Autowired StorageService storageService, @Autowired StorageLogService storageLogService) {
+    public StorageController(
+            @Autowired StorageService storageService,
+            @Autowired StorageLogService storageLogService,
+            @Autowired ZeppelinRestClient zeppelinRestClient,
+            @Autowired MailService mailService) {
         this.storageService = storageService;
         this.storageLogService = storageLogService;
+        this.zeppelinRestClient = zeppelinRestClient;
+        this.mailService = mailService;
     }
 
     @RequestMapping("/home")
@@ -77,10 +90,56 @@ public class StorageController {
         final Subject subject = SecurityUtils.getSubject();
         model.addAttribute("subjectName", SecurityUtils2.getSubjectName(subject));
         model.addAttribute("bucketName", bucketName);
-        model.addAttribute("allFileKeys", storageService.getAllStorageFileKeys());
-        model.addAttribute("cohortDefinitions", storageService.getMatchingStorageFileKeys(CohortDefinitionFile.class, ""));
+        model.addAttribute("allFileKeys", storageService.getAllStorageFileInfo());
         model.addAttribute("storageLog", storageLogService.findAll());
-        return "storage";
+        return "bucket";
+    }
+
+    @RequestMapping("/testCohorts")
+    public String testCohorts(HttpServletRequest request, Model model) {
+        final Subject subject = SecurityUtils.getSubject();
+        model.addAttribute("subjectName", SecurityUtils2.getSubjectName(subject));
+        model.addAttribute("bucketName", bucketName);
+        model.addAttribute("cohortDefinitions", storageService.getMatchingStorageFileInfo(CohortDefinitionFile.class, ""));
+        final StorageLogEntry probe = StorageLogEntry.createProbe(CohortDefinitionFile.class);
+        model.addAttribute("storageLog", storageLogService.findByCriteria(probe));
+        return "cohort";
+    }
+
+    @RequestMapping("/testCohortResults")
+    public String testCohortResults(HttpServletRequest request, Model model) {
+        final Subject subject = SecurityUtils.getSubject();
+        final String cohortDefinitionUuid = request.getParameter("cohortDefinitionUuid");
+        model.addAttribute("subjectName", SecurityUtils2.getSubjectName(subject));
+        model.addAttribute("cohortDefinitionUuid", cohortDefinitionUuid);
+        model.addAttribute("cohortInclusionResults", storageService.getMatchingStorageFileInfo(CohortInclusionResultsFile.class, cohortDefinitionUuid));
+        final StorageLogEntry probe = StorageLogEntry.createProbe(CohortInclusionResultsFile.class);
+        model.addAttribute("storageLog", storageLogService.findByCriteria(probe));
+        return "cohortResults";
+    }
+
+
+    @RequestMapping("/testStudy")
+    public String testStudy(HttpServletRequest request, Model model) {
+        final Subject subject = SecurityUtils.getSubject();
+        model.addAttribute("subjectName", SecurityUtils2.getSubjectName(subject));
+        model.addAttribute("bucketName", bucketName);
+        model.addAttribute("notebooks", storageService.getMatchingStorageFileInfo(NotebookFile.class, TEST_STUDY_UUID));
+        final StorageLogEntry probe = StorageLogEntry.createProbe(NotebookFile.class);
+        model.addAttribute("storageLog", storageLogService.findByCriteria(probe));
+        return "study";
+    }
+
+    @RequestMapping("/testNotebook")
+    public String testNotebook(HttpServletRequest request, Model model) {
+        final Subject subject = SecurityUtils.getSubject();
+        final String notebookUuid = request.getParameter("notebookUuid");
+        model.addAttribute("subjectName", SecurityUtils2.getSubjectName(subject));
+        model.addAttribute("notebookUuid", notebookUuid);
+        model.addAttribute("notebookResults", storageService.getMatchingStorageFileInfo(NotebookResultsFile.class, TEST_STUDY_UUID, notebookUuid));
+        final StorageLogEntry probe = StorageLogEntry.createProbe(NotebookResultsFile.class);
+        model.addAttribute("storageLog", storageLogService.findByCriteria(probe));
+        return "notebook";
     }
 
     @RequestMapping("/file")
@@ -159,7 +218,7 @@ public class StorageController {
     @RequestMapping("/cohort-definitions")
     public ResponseEntity<Object> getCohortDefinitions() {
         try {
-            List<StorageFileInfo> cohortDefinitions = storageService.getMatchingStorageFileKeys(CohortDefinitionFile.class, "");
+            List<StorageFileInfo> cohortDefinitions = storageService.getMatchingStorageFileInfo(CohortDefinitionFile.class, "");
             return new ResponseEntity<>(cohortDefinitions, HttpStatus.OK);
         } catch (StorageException e) {
             LOGGER.error(e.getMessage(), e);
@@ -201,7 +260,7 @@ public class StorageController {
     @RequestMapping("/cohort-results/{cohortDefinitionUuid}")
     public ResponseEntity<Object> getCohortInclusionResults(@PathVariable String cohortDefinitionUuid) {
         try {
-            List<StorageFileInfo> cohortInclusionResults = storageService.getMatchingStorageFileKeys(CohortInclusionResultsFile.class, cohortDefinitionUuid);
+            List<StorageFileInfo> cohortInclusionResults = storageService.getMatchingStorageFileInfo(CohortInclusionResultsFile.class, cohortDefinitionUuid);
             return new ResponseEntity<>(cohortInclusionResults, HttpStatus.OK);
         } catch (StorageException e) {
             LOGGER.error(e.getMessage(), e);
@@ -212,18 +271,63 @@ public class StorageController {
     @PostMapping("/notebooks/{studyId}")
     public ResponseEntity<Object> saveNotebook(@PathVariable String studyId, @RequestParam("file") MultipartFile file) {
         try {
-            String uuid = UUID.randomUUID().toString();
-            final NotebookFile notebookFile = new NotebookFile(
-                    studyId,
-                    new StorageFileInfo(uuid, file.getOriginalFilename()),
-                    createTempFile(file));
-            storageService.saveStorageFile(notebookFile);
-            logStorageAction(StorageLogEntry.Action.UPLOAD, notebookFile);
-            return ResponseEntity.created(new URI("/notebooks/" + studyId + "/ " + uuid)).build();
+            final File uploadedNotebookFile = createTempFile(file);
+            final UUID uuid = saveNotebook(studyId, uploadedNotebookFile, file.getOriginalFilename());
+
+            return ResponseEntity.created(new URI("/notebooks/" + studyId + "/" + uuid.toString())).build();
         } catch (StorageException | IOException | URISyntaxException e) {
             LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>("The notebook cannot be saved!", new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @PostMapping("/notebooks/zeppelin/{studyId}")
+    public ResponseEntity<Object> saveNotebookFromZeppelin(@PathVariable String studyId, @RequestParam("zeppelinNotebookId") String zeppelinNotebookId) {
+        try {
+            // Download notebook from the Zeppelin server
+            final String filename = zeppelinNotebookId + ".json";
+            final File zeppelinNotebookFile = StorageService.createTempFile(filename);
+            zeppelinRestClient.downloadNotebook(zeppelinNotebookId, zeppelinNotebookFile);
+
+            final UUID notebookUuid = saveNotebook(studyId, zeppelinNotebookFile, filename);
+
+            return ResponseEntity.created(new URI("/notebooks/" + studyId + "/" + notebookUuid.toString())).build();
+        } catch (StorageException | IOException | URISyntaxException e) {
+            LOGGER.error(e.getMessage(), e);
+            return new ResponseEntity<>("The notebook cannot be saved!", new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private UUID saveNotebook(String studyId, File notebook, String filename) throws IOException {
+        // Generate a UUID
+        final UUID notebookUuid = UUID.randomUUID();
+
+        // Add a UUID to the notebook file
+        final File modifiedNotebook = addUuidToNotebook(notebook, filename, notebookUuid);
+
+        // Store the notebook
+        final NotebookFile notebookFile = new NotebookFile(
+                studyId,
+                new StorageFileInfo(notebookUuid.toString(), filename),
+                modifiedNotebook);
+        storageService.saveStorageFile(notebookFile);
+
+        // Log the upload of the notebook
+        logStorageAction(StorageLogEntry.Action.UPLOAD, notebookFile);
+
+        // Send email
+        mailService.sendNewNotebookMail(serverName + buildPath("/notebooks", notebookFile.getStudyId(), notebookFile.getUuid()));
+
+        return notebookUuid;
+    }
+
+    private File addUuidToNotebook(File notebook, String filename, UUID uuid) throws IOException {
+        final File modifiedNotebookFile = StorageService.createTempFile(filename);
+        new NotebookJsonExtender().addUuid(
+                new FileReader(notebook),
+                new FileWriter(modifiedNotebookFile),
+                uuid);
+        return modifiedNotebookFile;
     }
 
     @RequestMapping("/notebooks/{studyId}/{notebookUuid}")
@@ -243,11 +347,22 @@ public class StorageController {
     @RequestMapping("/notebooks/{studyId}")
     public ResponseEntity<Object> getNotebooks(@PathVariable String studyId) {
         try {
-            List<StorageFileInfo> notebooks = storageService.getMatchingStorageFileKeys(NotebookFile.class, studyId);
+            List<StorageFileInfo> notebooks = storageService.getMatchingStorageFileInfo(NotebookFile.class, studyId);
             return new ResponseEntity<>(notebooks, HttpStatus.OK);
         } catch (StorageException e) {
             LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>("The list of notebooks cannot be retrieved!", new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/notebook-results/{notebookUuid}")
+    public ResponseEntity<Object> saveNotebookResult(@PathVariable String notebookUuid, @RequestParam("file") MultipartFile file)  {
+        final StorageFileInfo notebookFileInfo = storageService.getStorageFileInfoByUuid(NotebookFile.class, notebookUuid);
+        if(notebookFileInfo == null) {
+            return new ResponseEntity<>(String.format("No notebook with UUID %s found!", notebookUuid), new HttpHeaders(), HttpStatus.NOT_FOUND);
+        } else {
+            String studyId = getStudyUuid(notebookFileInfo.getKey());
+            return saveNotebookResult(studyId, notebookFileInfo.getUuid(), file);
         }
     }
 
@@ -286,7 +401,7 @@ public class StorageController {
     @RequestMapping("/notebook-results/{studyId}/{notebookUuid}")
     public ResponseEntity<Object> getNotebookResults(@PathVariable String studyId, @PathVariable String notebookUuid) {
         try {
-            List<StorageFileInfo> notebookResults = storageService.getMatchingStorageFileKeys(NotebookResultsFile.class, studyId, notebookUuid);
+            List<StorageFileInfo> notebookResults = storageService.getMatchingStorageFileInfo(NotebookResultsFile.class, studyId, notebookUuid);
             return new ResponseEntity<>(notebookResults, HttpStatus.OK);
         } catch (StorageException e) {
             LOGGER.error(e.getMessage(), e);
@@ -332,9 +447,17 @@ public class StorageController {
         final String user = SecurityUtils2.getSubjectName(SecurityUtils.getSubject());
         logEntry.setUser(user);
         logEntry.setAction(action);
-        logEntry.setStorageFileUuid(new AmazonS3StorageKeyBuilder().getUuid(fileKey));
+        logEntry.setStorageFileUuid(getUuid(fileKey));
         logEntry.setStorageFileKey(fileKey);
         storageLogService.save(logEntry);
+    }
+
+    private String getUuid(String fileKey) {
+        return new AmazonS3StorageKeyBuilder().getUuid(fileKey);
+    }
+
+    private String getStudyUuid(String fileKey) {
+        return new AmazonS3StorageKeyBuilder().getKeyPartsWithoutRootFolder(fileKey)[0];
     }
 
 }

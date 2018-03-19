@@ -12,7 +12,7 @@ public class AmazonS3StorageKeyBuilderTest {
 
     private AmazonS3StorageKeyBuilder keyBuilder = new AmazonS3StorageKeyBuilder();
     private String uuid = UUID.randomUUID().toString();
-    private File testFile = new File("test.json");
+    private File testFile = new File("The Zen of Python.json");
 
     @Test
     public void buildCohortDefinitionKeyPrefix() {
@@ -70,11 +70,11 @@ public class AmazonS3StorageKeyBuilderTest {
 
     @Test
     public void getFilename() {
-        assertEquals("test.json", keyBuilder.getFilename("notebook-results/Study X/b17c3bb3-dba1-4be4-8ced-8d9128007a4e/82829b4a-96a1-4407-8632-75b77fdb860c/test.json"));
+        assertEquals("The Zen of Python.json", keyBuilder.getFilename("notebook-results/Study X/b17c3bb3-dba1-4be4-8ced-8d9128007a4e/82829b4a-96a1-4407-8632-75b77fdb860c/The Zen of Python.json"));
     }
 
     @Test
     public void getUuid() {
-        assertEquals("82829b4a-96a1-4407-8632-75b77fdb860c", keyBuilder.getUuid("notebook-results/Study X/b17c3bb3-dba1-4be4-8ced-8d9128007a4e/82829b4a-96a1-4407-8632-75b77fdb860c/test.json"));
+        assertEquals("82829b4a-96a1-4407-8632-75b77fdb860c", keyBuilder.getUuid("notebook-results/Study X/b17c3bb3-dba1-4be4-8ced-8d9128007a4e/82829b4a-96a1-4407-8632-75b77fdb860c/The Zen of Python.json"));
     }
 }

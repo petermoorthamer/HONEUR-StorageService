@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta name="description" content=""/>
+    <meta name="author" content=""/>
+
+    <title>HONEUR - Storage Service</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+        <small><img src="/img/HONEUR_logo.png" alt="HONEUR" width="200"/> Haematology Outcomes Network Europe</small>
+        <small class="text-right">
+            &nbsp; <span th:text="'Welcome, ' + ${subjectName}"></span>
+        </small>
+    </div>
+</nav>
+
+<!-- Page Content -->
+<div class="container">
+
+    <h2 th:text="${bucketName}"></h2>
+
+    <h3>Test</h3>
+    <p><a href="/testCohorts">Cohort definitions</a></p>
+    <p><a href="/testStudy">Study</a></p>
+
+</div>
+
+<div class="container">
+
+    <h3>All files</h3>
+
+    <table class="table" th:object="${allFileKeys}" id="allFileKeysTable" th:if="${!allFileKeys.empty}">
+        <thead>
+            <tr>
+                <th>Filename</th>
+                <th>File key</th>
+                <th>Download</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="fileinfo :${allFileKeys}">
+                <td>
+                    <span th:text="${fileinfo.originalFilename}"></span>
+                </td>
+                <td>
+                    <span th:text="${fileinfo.key}"></span>
+                </td>
+                <td>
+                    <a th:href="@{'/file?fileKey=' + ${fileinfo.key}}" th:text="Download"></a>
+                </td>
+                <td>
+                    <form th:action="@{'/file?fileKey=' + ${fileinfo.key}}" th:method="delete">
+                        <input type="submit" value="Delete" />
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p th:if="${allFileKeys.empty}">Empty bucket</p>
+
+    <p><br/></p>
+
+</div>
+
+
+<div class="container">
+
+    <h3>Storage Log</h3>
+
+    <table class="table" th:object="${storageLog}" id="storageLogTable" th:if="${!storageLog.empty}">
+        <thead>
+        <tr>
+            <th>User</th>
+            <th>Action</th>
+            <th>Data/Time</th>
+            <th>File type</th>
+            <th>File name</th>
+            <th>File UUID</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="storageLogEntry :${storageLog}">
+            <td th:text="${storageLogEntry.user}"></td>
+            <td th:text="${storageLogEntry.action}"></td>
+            <td th:text="${storageLogEntry.dateTime}"></td>
+            <td th:text="${storageLogEntry.storageFileClass}"></td>
+            <td th:text="${storageLogEntry.storageFileName}"></td>
+            <td th:text="${storageLogEntry.storageFileUuid}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <p th:if="${storageLog.empty}">Empty storage log</p>
+
+</div>
+
+<!-- Footer -->
+<footer class="py-5">
+    <div class="container">
+        <p class="text-center">Copyright &copy; HONEUR 2018</p>
+    </div>
+    <!-- /.container -->
+</footer>
+
+</body>
+</html>

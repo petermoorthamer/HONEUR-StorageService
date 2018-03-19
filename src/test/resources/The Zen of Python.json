@@ -1,0 +1,173 @@
+{
+  "paragraphs": [
+    {
+      "title": "The Zen of Python",
+      "text": "import this",
+      "dateUpdated": "2018-03-16T11:50:17+0100",
+      "config": {
+        "lineNumbers": false,
+        "tableHide": false,
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/scala",
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "The Zen of Python, by Tim Peters\n\nBeautiful is better than ugly.\nExplicit is better than implicit.\nSimple is better than complex.\nComplex is better than complicated.\nFlat is better than nested.\nSparse is better than dense.\nReadability counts.\nSpecial cases aren't special enough to break the rules.\nAlthough practicality beats purity.\nErrors should never pass silently.\nUnless explicitly silenced.\nIn the face of ambiguity, refuse the temptation to guess.\nThere should be one-- and preferably only one --obvious way to do it.\nAlthough that way may not be obvious at first unless you're Dutch.\nNow is better than never.\nAlthough never is often better than *right* now.\nIf the implementation is hard to explain, it's a bad idea.\nIf the implementation is easy to explain, it may be a good idea.\nNamespaces are one honking great idea -- let's do more of those!\n"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1521197417590_-1356634484",
+      "id": "20180316-083012_1878484083",
+      "dateCreated": "2018-03-16T11:50:17+0100",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "focus": true,
+      "$$hashKey": "object:10177"
+    },
+    {
+      "title": "Please confirm",
+      "text": "print(\"Confirmed!\")",
+      "dateUpdated": "2018-03-16T11:55:39+0100",
+      "config": {
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/scala",
+        "editorHide": false,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1521197417591_-1357019233",
+      "id": "20180316-083901_128272874",
+      "dateCreated": "2018-03-16T11:50:17+0100",
+      "status": "FINISHED",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:10178",
+      "user": "anonymous",
+      "dateFinished": "2018-03-16T11:55:39+0100",
+      "dateStarted": "2018-03-16T11:55:39+0100"
+    },
+    {
+      "text": "print(\"UUID: uuid-placeholder\")",
+      "dateUpdated": "2018-03-16T11:58:17+0100",
+      "config": {
+        "tableHide": false,
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/scala",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {
+          "UUID": "uuid-placeholderfdsqdsf"
+        },
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "UUID: uuid-placeholder"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1521197417591_-1357019233",
+      "id": "20180316-114212_2049948148",
+      "dateCreated": "2018-03-16T11:50:17+0100",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:10179",
+      "user": "anonymous",
+      "dateFinished": "2018-03-16T11:58:17+0100",
+      "dateStarted": "2018-03-16T11:58:17+0100"
+    },
+    {
+      "text": "%md\n",
+      "dateUpdated": "2018-03-16T11:50:17+0100",
+      "config": {
+        "tableHide": false,
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/markdown",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1521197417591_-1357019233",
+      "id": "20180316-114226_2067843666",
+      "dateCreated": "2018-03-16T11:50:17+0100",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:10180"
+    }
+  ],
+  "name": "The Zen of Python",
+  "id": "2D8Y19VKM",
+  "angularObjects": {
+    "2DASZ137W:shared_process": [],
+    "2DAN56ZZF:shared_process": [],
+    "2D7W1AG15:shared_process": [],
+    "2DACHQBZZ:shared_process": [],
+    "2DA9SMVWY:shared_process": [],
+    "2DAYUB5QE:shared_process": [],
+    "2D7TBVPRK:shared_process": [],
+    "2D8Q7BH56:shared_process": [],
+    "2D92FV5PQ:shared_process": [],
+    "2D8Q2J6S7:shared_process": [],
+    "2DA79GGZG:shared_process": [],
+    "2D9FF3ZE7:shared_process": [],
+    "2DAM4BFAN:shared_process": [],
+    "2D8GVSWH8:shared_process": [],
+    "2D8S5EWZY:shared_process": [],
+    "2DA8V86MF:shared_process": [],
+    "2DAQXGE5X:shared_process": [],
+    "2D8TT39P1:shared_process": [],
+    "2D8VE2GQN:shared_process": []
+  },
+  "config": {
+    "looknfeel": "default",
+    "personalizedMode": "false"
+  },
+  "info": {}
+}
