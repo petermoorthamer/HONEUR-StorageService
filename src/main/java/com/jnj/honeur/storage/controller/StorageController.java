@@ -285,6 +285,12 @@ public class StorageController {
         }
     }
 
+    @PostMapping("/notebooks/zeppelin/ui/{studyId}")
+    public String uploadZeppelinNotebook(@PathVariable String studyId, @RequestParam("zeppelinNotebookId") String zeppelinNotebookId) {
+        saveNotebookFromZeppelin(studyId, zeppelinNotebookId);
+        return "redirect:/testStudy";
+    }
+
     @PostMapping("/notebooks/zeppelin/{studyId}")
     public ResponseEntity<Object> saveNotebookFromZeppelin(@PathVariable String studyId, @RequestParam("zeppelinNotebookId") String zeppelinNotebookId) {
         try {
