@@ -4,6 +4,7 @@ import com.jnj.honeur.security.SecurityUtils2;
 import com.jnj.honeur.storage.exception.StorageException;
 import com.jnj.honeur.storage.model.*;
 import com.jnj.honeur.storage.service.*;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
@@ -28,9 +30,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -356,29 +360,60 @@ public class StorageController {
     }
 
     @PostMapping("/notebook-results/{notebookUuid}")
-    public ResponseEntity<Object> saveNotebookResult(@PathVariable String notebookUuid, @RequestParam("file") MultipartFile file)  {
+    public ResponseEntity<Object> saveNotebookResult(@PathVariable String notebookUuid, @RequestParam("file") MultipartFile file, @RequestHeader HttpHeaders headers)  {
         final StorageFileInfo notebookFileInfo = storageService.getStorageFileInfoByUuid(NotebookFile.class, notebookUuid);
         if(notebookFileInfo == null) {
             return new ResponseEntity<>(String.format("No notebook with UUID %s found!", notebookUuid), new HttpHeaders(), HttpStatus.NOT_FOUND);
         } else {
             String studyId = getStudyUuid(notebookFileInfo.getKey());
-            return saveNotebookResult(studyId, notebookFileInfo.getUuid(), file);
+            return saveNotebookResult(studyId, notebookFileInfo.getUuid(), file, headers);
         }
     }
 
+    private boolean checkHttpHeader(HttpHeaders headers) {
+        return getUsernamePasswordCredentials(headers) != null;
+    }
+
+    private UsernamePasswordCredentials getUsernamePasswordCredentials(final HttpHeaders headers) {
+        final List<String> authorizationHeader = headers.get("Authorization");
+        if(authorizationHeader == null || authorizationHeader.isEmpty()) {
+            LOGGER.warn("No authorization header found in request!");
+            return null;
+        }
+        String authorization = authorizationHeader.get(0);
+        if (authorization != null && authorization.startsWith("Basic")) {
+            // Authorization: Basic base64credentials
+            String base64Credentials = authorization.substring("Basic".length()).trim();
+            String credentials = new String(Base64.getDecoder().decode(base64Credentials), Charset.forName("UTF-8"));
+            // credentials = username:password
+            final String[] values = credentials.split(":", 2);
+            return new UsernamePasswordCredentials(values[0], values[1]);
+        }
+        LOGGER.warn("No basic authentication info found in HTTP header!");
+        return null;
+    }
+
     @PostMapping("/notebook-results/{studyId}/{notebookUuid}")
-    public ResponseEntity<Object> saveNotebookResult(@PathVariable String studyId, @PathVariable String notebookUuid, @RequestParam("file") MultipartFile file)  {
+    public ResponseEntity<Object> saveNotebookResult(@PathVariable String studyId, @PathVariable String notebookUuid, @RequestParam("file") MultipartFile file, @RequestHeader HttpHeaders headers)  {
         try {
+            // Generate a UUID
             String uuid = UUID.randomUUID().toString();
+
+            // Store the notebook results file
             final NotebookResultsFile notebookResultsFile = new NotebookResultsFile(
                     studyId,
                     notebookUuid,
                     new StorageFileInfo(uuid, file.getOriginalFilename()),
                     createTempFile(file));
             storageService.saveStorageFile(notebookResultsFile);
-            logStorageAction(StorageLogEntry.Action.UPLOAD, notebookResultsFile);
-            return ResponseEntity.created(new URI(buildPath("/notebook-results", studyId, notebookUuid, uuid))).build();
-        } catch (StorageException | IOException | URISyntaxException e) {
+
+            // Log the upload of the notebook results
+            logStorageAction(StorageLogEntry.Action.UPLOAD, notebookResultsFile, getUsername(headers));
+
+            // Send a response with the URI of the newly created notebook results file
+            final URI notebookResultURI = buildURI("/notebook-results", studyId, notebookUuid, uuid);
+            return ResponseEntity.created(notebookResultURI).build();
+        } catch (StorageException | IOException e) {
             LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>("The notebook cannot be saved!", new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -407,6 +442,10 @@ public class StorageController {
             LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>("The list of notebooks cannot be retrieved!", new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private URI buildURI(String... pathParts) {
+        return ServletUriComponentsBuilder.fromCurrentRequest().replacePath(buildPath(pathParts)).build().toUri();
     }
 
     private String buildPath(String... pathParts) {
@@ -439,6 +478,14 @@ public class StorageController {
 
     private void logStorageAction(StorageLogEntry.Action action, AbstractStorageFile storageFile) {
         final String user = SecurityUtils2.getSubjectName(SecurityUtils.getSubject());
+        logStorageAction(action, storageFile, user);
+    }
+
+    private void logStorageAction(StorageLogEntry.Action action, AbstractStorageFile storageFile, String user) {
+        if(storageFile == null) {
+            LOGGER.warn("Missing file: cannot log storage action!");
+            return;
+        }
         storageLogService.save(new StorageLogEntry(user, action, storageFile));
     }
 
@@ -450,6 +497,20 @@ public class StorageController {
         logEntry.setStorageFileUuid(getUuid(fileKey));
         logEntry.setStorageFileKey(fileKey);
         storageLogService.save(logEntry);
+    }
+
+    private String getUsername(final HttpHeaders headers) {
+        String user = SecurityUtils2.getSubjectName(SecurityUtils.getSubject());
+        if(user != null) {
+            return user;
+        }
+        if(headers != null) {
+            UsernamePasswordCredentials usernamePasswordCredentials = getUsernamePasswordCredentials(headers);
+            if(usernamePasswordCredentials != null) {
+                return usernamePasswordCredentials.getUserName();
+            }
+        }
+        return null;
     }
 
     private String getUuid(String fileKey) {
