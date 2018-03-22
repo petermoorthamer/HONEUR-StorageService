@@ -4,6 +4,7 @@ import com.jnj.honeur.security.SecurityUtils2;
 import com.jnj.honeur.storage.exception.StorageException;
 import com.jnj.honeur.storage.model.*;
 import com.jnj.honeur.storage.service.*;
+import io.swagger.annotations.ApiOperation;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
@@ -76,12 +77,14 @@ public class StorageController {
         this.mailService = mailService;
     }
 
-    @RequestMapping("/home")
+    @ApiOperation(value = "Home page showing the API is up and running", response = String.class)
+    @RequestMapping(value = "/home", method = RequestMethod.GET)
     public String home() {
         return "index";
     }
 
-    @RequestMapping("/api")
+    @ApiOperation(value = "Lists all end points of the HONEUR Storage Service (HSS)", response = String.class)
+    @RequestMapping(value = "/api", method = RequestMethod.GET)
     public @ResponseBody Object showEndpointsAction() {
         return requestMappingHandlerMapping.getHandlerMethods().keySet().stream().map(t ->
                 (t.getMethodsCondition().getMethods().size() == 0 ? "GET" : t.getMethodsCondition().getMethods().toArray()[0]) + " " +
@@ -89,7 +92,8 @@ public class StorageController {
         ).toArray();
     }
 
-    @RequestMapping("/test")
+    @ApiOperation(value = "Endpoint for demo and testing purposes.  Shows the logged in user, the objects in the configured Amazon S3 bucket and the storage log", response = String.class)
+    @RequestMapping(value = "/test", method = RequestMethod.GET)
     public String test(HttpServletRequest request, Model model) {
         final Subject subject = SecurityUtils.getSubject();
         model.addAttribute("subjectName", SecurityUtils2.getSubjectName(subject));
@@ -99,7 +103,8 @@ public class StorageController {
         return "bucket";
     }
 
-    @RequestMapping("/testCohorts")
+    @ApiOperation(value = "Endpoint for demo and testing purposes.  The user can upload and download cohort definitions and view the storage log", response = String.class)
+    @RequestMapping(value = "/testCohorts", method = RequestMethod.GET)
     public String testCohorts(HttpServletRequest request, Model model) {
         final Subject subject = SecurityUtils.getSubject();
         model.addAttribute("subjectName", SecurityUtils2.getSubjectName(subject));
@@ -110,7 +115,8 @@ public class StorageController {
         return "cohort";
     }
 
-    @RequestMapping("/testCohortResults")
+    @ApiOperation(value = "Endpoint for demo and testing purposes.  The user can upload and download cohort inclusion results and view the storage log", response = String.class)
+    @RequestMapping(value = "/testCohortResults", method = RequestMethod.GET)
     public String testCohortResults(HttpServletRequest request, Model model) {
         final Subject subject = SecurityUtils.getSubject();
         final String cohortDefinitionUuid = request.getParameter("cohortDefinitionUuid");
@@ -122,8 +128,8 @@ public class StorageController {
         return "cohortResults";
     }
 
-
-    @RequestMapping("/testStudy")
+    @ApiOperation(value = "Endpoint for demo and testing purposes.  The user can upload and download notebooks and view the storage log", response = String.class)
+    @RequestMapping(value = "/testStudy", method = RequestMethod.GET)
     public String testStudy(HttpServletRequest request, Model model) {
         final Subject subject = SecurityUtils.getSubject();
         model.addAttribute("subjectName", SecurityUtils2.getSubjectName(subject));
@@ -134,7 +140,8 @@ public class StorageController {
         return "study";
     }
 
-    @RequestMapping("/testNotebook")
+    @ApiOperation(value = "Endpoint for demo and testing purposes.  The user can upload and download notebook results and view the storage log", response = String.class)
+    @RequestMapping(value = "/testNotebook", method = RequestMethod.GET)
     public String testNotebook(HttpServletRequest request, Model model) {
         final Subject subject = SecurityUtils.getSubject();
         final String notebookUuid = request.getParameter("notebookUuid");
@@ -146,7 +153,8 @@ public class StorageController {
         return "notebook";
     }
 
-    @RequestMapping("/file")
+    @ApiOperation(value = "Retrieves the file with the given file key", response = ResponseEntity.class)
+    @RequestMapping(value = "/file", method = RequestMethod.GET)
     public ResponseEntity<Object> downloadFile(@RequestParam String fileKey)  {
         try {
             final AbstractStorageFile storageFile = storageService.getStorageFileWithKey(fileKey);
@@ -158,6 +166,7 @@ public class StorageController {
         }
     }
 
+    @ApiOperation(value = "Deletes the file with the given file key", response = ResponseEntity.class)
     @DeleteMapping("/file")
     public ResponseEntity<Object> deleteFile(@RequestParam String fileKey)  {
         try {
@@ -170,7 +179,8 @@ public class StorageController {
         }
     }
 
-    @RequestMapping("/file/{uuid}")
+    @ApiOperation(value = "Retrieves the file with the given UUID", response = ResponseEntity.class)
+    @RequestMapping(value = "/file/{uuid}", method = RequestMethod.GET)
     public ResponseEntity<Object> getStorageFile(@PathVariable String uuid)  {
         try {
             final AbstractStorageFile storageFile = storageService.getStorageFileWithUuid(uuid);
@@ -183,6 +193,7 @@ public class StorageController {
     }
 
     //@RequiresAuthentication
+    @ApiOperation(value = "Stores a cohort definition file with the given UUID", response = ResponseEntity.class)
     @PostMapping("/cohort-definitions/{uuid}")
     public ResponseEntity<Object> saveCohortDefinition(@PathVariable final String uuid, @RequestParam("file") final MultipartFile file) {
         try {
@@ -205,7 +216,8 @@ public class StorageController {
     }
 
     //@RequiresAuthentication
-    @RequestMapping("/cohort-definitions/{uuid}")
+    @ApiOperation(value = "Retrieves the cohort definition file with the given UUID", response = ResponseEntity.class)
+    @RequestMapping(value = "/cohort-definitions/{uuid}", method = RequestMethod.GET)
     public ResponseEntity<Object> getCohortDefinition(@PathVariable String uuid)  {
         final Subject subject = SecurityUtils.getSubject();
 
@@ -219,7 +231,8 @@ public class StorageController {
         }
     }
 
-    @RequestMapping("/cohort-definitions")
+    @ApiOperation(value = "Returns a list of all cohort definitions the logged on user has access to", response = ResponseEntity.class)
+    @RequestMapping(value = "/cohort-definitions", method = RequestMethod.GET)
     public ResponseEntity<Object> getCohortDefinitions() {
         try {
             List<StorageFileInfo> cohortDefinitions = storageService.getMatchingStorageFileInfo(CohortDefinitionFile.class, "");
@@ -230,6 +243,7 @@ public class StorageController {
         }
     }
 
+    @ApiOperation(value = "Stores the cohort inclusion results file and links it to the cohort definition with the given UUID", response = ResponseEntity.class)
     @PostMapping("/cohort-results/{cohortDefinitionUuid}")
     public ResponseEntity<Object> saveCohortInclusionResult(@PathVariable String cohortDefinitionUuid, @RequestParam("file") MultipartFile file) {
         try {
@@ -247,7 +261,8 @@ public class StorageController {
         }
     }
 
-    @RequestMapping("/cohort-results/{cohortDefinitionUuid}/{cohortResultsUuid}")
+    @ApiOperation(value = "Retrieves the cohort inclusion results file with the given UUID", response = ResponseEntity.class)
+    @RequestMapping(value = "/cohort-results/{cohortDefinitionUuid}/{cohortResultsUuid}", method = RequestMethod.GET)
     public ResponseEntity<Object> getCohortInclusionResult(@PathVariable String cohortDefinitionUuid, @PathVariable String cohortResultsUuid)  {
         final Subject subject = SecurityUtils.getSubject();
 
@@ -261,7 +276,8 @@ public class StorageController {
         }
     }
 
-    @RequestMapping("/cohort-results/{cohortDefinitionUuid}")
+    @ApiOperation(value = "Returns a list of cohort inclusion results for the cohort definition with the given UUID", response = ResponseEntity.class)
+    @RequestMapping(value = "/cohort-results/{cohortDefinitionUuid}", method = RequestMethod.GET)
     public ResponseEntity<Object> getCohortInclusionResults(@PathVariable String cohortDefinitionUuid) {
         try {
             List<StorageFileInfo> cohortInclusionResults = storageService.getMatchingStorageFileInfo(CohortInclusionResultsFile.class, cohortDefinitionUuid);
@@ -272,6 +288,7 @@ public class StorageController {
         }
     }
 
+    @ApiOperation(value = "Stores a notebook file for a study with the give ID", response = ResponseEntity.class)
     @PostMapping("/notebooks/{studyId}")
     public ResponseEntity<Object> saveNotebook(@PathVariable String studyId, @RequestParam("file") MultipartFile file) {
         try {
@@ -285,12 +302,14 @@ public class StorageController {
         }
     }
 
+    @ApiOperation(value = "Endpoint for demo and testing purposes.  Downloads the notebook with the given Zeppelin ID from the configured Zeppelin server and stores the notebook for the study with the give ID", response = ResponseEntity.class)
     @PostMapping("/notebooks/zeppelin/ui/{studyId}")
     public String uploadZeppelinNotebook(@PathVariable String studyId, @RequestParam("zeppelinNotebookId") String zeppelinNotebookId) {
         saveNotebookFromZeppelin(studyId, zeppelinNotebookId);
         return "redirect:/testStudy";
     }
 
+    @ApiOperation(value = "Downloads the notebook with the given Zeppelin ID from the configured Zeppelin server and stores the notebook for the study with the give ID", response = ResponseEntity.class)
     @PostMapping("/notebooks/zeppelin/{studyId}")
     public ResponseEntity<Object> saveNotebookFromZeppelin(@PathVariable String studyId, @RequestParam("zeppelinNotebookId") String zeppelinNotebookId) {
         try {
@@ -340,7 +359,8 @@ public class StorageController {
         return modifiedNotebookFile;
     }
 
-    @RequestMapping("/notebooks/{studyId}/{notebookUuid}")
+    @ApiOperation(value = "Retrieves the notebook file with the given UUID", response = ResponseEntity.class)
+    @RequestMapping(value = "/notebooks/{studyId}/{notebookUuid}", method = RequestMethod.GET)
     public ResponseEntity<Object> getNotebook(@PathVariable String studyId, @PathVariable String notebookUuid)  {
         final Subject subject = SecurityUtils.getSubject();
 
@@ -354,7 +374,8 @@ public class StorageController {
         }
     }
 
-    @RequestMapping("/notebooks/{studyId}")
+    @ApiOperation(value = "Returns a list of notebooks for the study with the given ID", response = ResponseEntity.class)
+    @RequestMapping(value = "/notebooks/{studyId}", method = RequestMethod.GET)
     public ResponseEntity<Object> getNotebooks(@PathVariable String studyId) {
         try {
             List<StorageFileInfo> notebooks = storageService.getMatchingStorageFileInfo(NotebookFile.class, studyId);
@@ -365,6 +386,7 @@ public class StorageController {
         }
     }
 
+    @ApiOperation(value = "Stores the notebook results file for the notebook with the given ID", response = ResponseEntity.class)
     @PostMapping("/notebook-results/{notebookUuid}")
     public ResponseEntity<Object> saveNotebookResult(@PathVariable String notebookUuid, @RequestParam("file") MultipartFile file, @RequestHeader HttpHeaders headers)  {
         final StorageFileInfo notebookFileInfo = storageService.getStorageFileInfoByUuid(NotebookFile.class, notebookUuid);
@@ -399,6 +421,7 @@ public class StorageController {
         return null;
     }
 
+    @ApiOperation(value = "Stores the notebook results file for the study and notebook with the given ID", response = ResponseEntity.class)
     @PostMapping("/notebook-results/{studyId}/{notebookUuid}")
     public ResponseEntity<Object> saveNotebookResult(@PathVariable String studyId, @PathVariable String notebookUuid, @RequestParam("file") MultipartFile file, @RequestHeader HttpHeaders headers)  {
         try {
@@ -425,7 +448,8 @@ public class StorageController {
         }
     }
 
-    @RequestMapping("/notebook-results/{studyId}/{notebookUuid}/{notebookResultUuid}")
+    @ApiOperation(value = "Retrieves the notebook results file with the given UUID", response = ResponseEntity.class)
+    @RequestMapping(value = "/notebook-results/{studyId}/{notebookUuid}/{notebookResultUuid}", method = RequestMethod.GET)
     public ResponseEntity<Object> getNotebookResult(@PathVariable String studyId, @PathVariable String notebookUuid, @PathVariable String notebookResultUuid)  {
         final Subject subject = SecurityUtils.getSubject();
 
@@ -439,7 +463,8 @@ public class StorageController {
         }
     }
 
-    @RequestMapping("/notebook-results/{studyId}/{notebookUuid}")
+    @ApiOperation(value = "Returns a list of notebook results for the notebook with the given UUID", response = ResponseEntity.class)
+    @RequestMapping(value = "/notebook-results/{studyId}/{notebookUuid}", method = RequestMethod.GET)
     public ResponseEntity<Object> getNotebookResults(@PathVariable String studyId, @PathVariable String notebookUuid) {
         try {
             List<StorageFileInfo> notebookResults = storageService.getMatchingStorageFileInfo(NotebookResultsFile.class, studyId, notebookUuid);
@@ -505,6 +530,11 @@ public class StorageController {
         storageLogService.save(logEntry);
     }
 
+    /**
+     * Returns the username of the logged in user.  If no user is logged in,
+     * it tries to find the username in the "Authorization" section of the HTTP header.
+     * Returns null if no username can be found.
+     */
     private String getUsername(final HttpHeaders headers) {
         String user = SecurityUtils2.getSubjectName(SecurityUtils.getSubject());
         if(user != null) {

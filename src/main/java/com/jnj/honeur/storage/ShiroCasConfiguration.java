@@ -150,6 +150,7 @@ public class ShiroCasConfiguration extends ShiroWebAutoConfiguration {
                 .excludeRegex("^/fonts/.*$")
                 .excludeRegex("^/error/.*$")
                 .excludeRegex("^/fragments/.*$")
+                .excludeRegex("^/cohort-results/.*$")
                 .excludeRegex("^/notebook-results/.*$")
                 .excludePath("/")
                 //.excludePath("/test")

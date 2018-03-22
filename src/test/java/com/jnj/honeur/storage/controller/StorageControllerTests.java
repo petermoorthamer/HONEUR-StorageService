@@ -16,12 +16,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(StorageController.class)
-public class StorageControllerTest {
+public class StorageControllerTests {
 
     @Autowired
     private MockMvc mvc;
     @Autowired
     private AmazonS3StorageService storageService;
+    @Autowired
+    private StorageController storageController;
 
     @Test
     public void home() throws Exception {
