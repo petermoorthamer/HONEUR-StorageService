@@ -101,7 +101,7 @@ public class ShiroCasConfiguration extends ShiroWebAutoConfiguration {
         chainDefinition.addPathDefinition("/logout", "logout");
         chainDefinition.addPathDefinition("/callback", "callbackFilter");
         chainDefinition.addPathDefinition("/test", "authc");
-        chainDefinition.addPathDefinition("/**", "anon");
+        chainDefinition.addPathDefinition("/**", "authc");
 
         return chainDefinition;
     }
@@ -150,7 +150,7 @@ public class ShiroCasConfiguration extends ShiroWebAutoConfiguration {
                 .excludeRegex("^/fonts/.*$")
                 .excludeRegex("^/error/.*$")
                 .excludeRegex("^/fragments/.*$")
-                .excludeRegex("^/cohort-results/.*$")
+                //.excludeRegex("^/cohort-results/.*$")
                 .excludeRegex("^/notebook-results/.*$")
                 .excludePath("/")
                 //.excludePath("/test")

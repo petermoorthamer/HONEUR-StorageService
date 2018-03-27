@@ -5,6 +5,7 @@ import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,13 +13,18 @@ import java.util.UUID;
 
 public class StorageRestClient {
 
-    public void postCohortResults() throws IOException {
+    public void postCohortResults(final HttpSession session) throws IOException {
         final LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
         //map.add("file", new ClassPathResource("The Zen of Python.json"));
         map.add("file", new FileSystemResource(createFile().getAbsolutePath()));
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        if(session != null) {
+            headers.add("Cookie", "JSESSIONID=" + session.getId());
+            System.out.println("Cookie: " + "JSESSIONID=" + session.getId());
+        }
 
         HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(map, headers);
 
@@ -47,7 +53,7 @@ public class StorageRestClient {
     public static void main(String[] args) {
         try {
             StorageRestClient restClient = new StorageRestClient();
-            restClient.postCohortResults();
+            restClient.postCohortResults(null);
         } catch (IOException e) {
             e.printStackTrace();
         }

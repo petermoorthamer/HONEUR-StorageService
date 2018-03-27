@@ -103,6 +103,18 @@ public class StorageController {
         return "bucket";
     }
 
+    @RequestMapping(value = "/testPost", method = RequestMethod.GET)
+    public String testPost(HttpServletRequest request, Model model) {
+        StorageRestClient restClient = new StorageRestClient();
+        try {
+            LOGGER.info("Request: " + request);
+            restClient.postCohortResults(request.getSession(false));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "index";
+    }
+
     @ApiOperation(value = "Endpoint for demo and testing purposes.  The user can upload and download cohort definitions and view the storage log", response = String.class)
     @RequestMapping(value = "/testCohorts", method = RequestMethod.GET)
     public String testCohorts(HttpServletRequest request, Model model) {
@@ -193,22 +205,17 @@ public class StorageController {
     }
 
     //@RequiresAuthentication
-    @ApiOperation(value = "Stores a cohort definition file with the given UUID", response = ResponseEntity.class)
-    @PostMapping("/cohort-definitions/{uuid}")
-    public ResponseEntity<Object> saveCohortDefinition(@PathVariable final String uuid, @RequestParam("file") final MultipartFile file) {
+    @ApiOperation(value = "Stores a cohort definition file and assigns a UUID to it", response = ResponseEntity.class)
+    @PostMapping("/cohort-definitions")
+    public ResponseEntity<Object> saveCohortDefinition(@RequestParam("file") final MultipartFile file) {
         try {
-            String cohortDefinitionUuid;
-            try {
-                cohortDefinitionUuid = UUID.fromString(uuid).toString();
-            } catch (IllegalArgumentException e) {
-                cohortDefinitionUuid = UUID.randomUUID().toString();
-            }
+            final String cohortDefinitionUuid = UUID.randomUUID().toString();;
             final CohortDefinitionFile cohortDefinitionFile = new CohortDefinitionFile(
                     new StorageFileInfo(cohortDefinitionUuid, file.getOriginalFilename()),
                     createTempFile(file));
             storageService.saveStorageFile(cohortDefinitionFile);
             logStorageAction(StorageLogEntry.Action.UPLOAD, cohortDefinitionFile);
-            return ResponseEntity.created(new URI("/cohort-definitions/" + uuid)).build();
+            return ResponseEntity.created(new URI("/cohort-definitions/" + cohortDefinitionUuid)).build();
         } catch (StorageException | IOException | URISyntaxException e) {
             LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>("The cohort definition cannot be saved!", new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
