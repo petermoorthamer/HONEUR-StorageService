@@ -1,5 +1,8 @@
 package com.jnj.honeur.storage;
 
+import com.amazonaws.auth.STSSessionCredentialsProvider;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.jnj.honeur.aws.s3.AmazonS3Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,8 +23,8 @@ public class StorageApplication {
 
     @Bean(name = "amazonS3Service")
     public AmazonS3Service amazonS3Service() {
-        //return new AmazonS3Service(new BasicAWSCredentials(accessKey, secretKey));
-        return new AmazonS3Service();
+        final AWSSecurityTokenService tokenService = AWSSecurityTokenServiceClientBuilder.defaultClient();
+        return new AmazonS3Service(new STSSessionCredentialsProvider(tokenService));
     }
 
 	public static void main(String[] args) {
