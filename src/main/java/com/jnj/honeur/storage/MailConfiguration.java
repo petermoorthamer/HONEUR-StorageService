@@ -1,5 +1,6 @@
 package com.jnj.honeur.storage;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.SimpleMailMessage;
@@ -17,13 +18,17 @@ import java.util.Properties;
 public class MailConfiguration {
 
     @Bean
-    public JavaMailSender getJavaMailSender() {
+    public JavaMailSender getJavaMailSender(
+            @Value("${mail.server.host}") String mailServerHost,
+            @Value("${mail.server.port}") int mailServerPort,
+            @Value("${mail.server.username}") String mailServerUsername,
+            @Value("${mail.server.password}") String mailServerPassword  ) {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-        mailSender.setHost("smtp.gmail.com");
-        mailSender.setPort(587);
 
-        mailSender.setUsername("moorthamer@gmail.com");
-        mailSender.setPassword("???");
+        mailSender.setHost(mailServerHost);
+        mailSender.setPort(mailServerPort);
+        mailSender.setUsername(mailServerUsername);
+        mailSender.setPassword(mailServerPassword);
 
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");

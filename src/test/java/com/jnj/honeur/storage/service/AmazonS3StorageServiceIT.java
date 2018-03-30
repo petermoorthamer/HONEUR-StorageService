@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class AmazonS3StorageServiceTest {
+public class AmazonS3StorageServiceIT {
 
     @Autowired
     private AmazonS3StorageService amazonS3StorageService;

@@ -7,7 +7,7 @@
     <groupId>com.jnj.honeur</groupId>
     <artifactId>storage-service</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>war</packaging>
 
     <name>HONEUR Storage Service</name>
     <description>HONEUR platform API enabling secure file transfers with external partners</description>
@@ -128,7 +128,7 @@
 
     </dependencies>
 
-    <build>
+    <!--build>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -142,6 +142,6 @@
                 </executions>
             </plugin>
         </plugins>
-    </build>
+    </build-->
 
 </project>

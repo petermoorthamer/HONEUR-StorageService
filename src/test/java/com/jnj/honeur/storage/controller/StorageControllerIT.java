@@ -16,7 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(StorageController.class)
-public class StorageControllerTests {
+public class StorageControllerIT {
 
     @Autowired
     private MockMvc mvc;
