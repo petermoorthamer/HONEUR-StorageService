@@ -152,9 +152,11 @@ public class ShiroCasConfiguration extends ShiroWebAutoConfiguration {
                 .excludeRegex("^/fragments/.*$")
                 .excludeRegex("^/cohort-definitions.*$")
                 .excludeRegex("^/cohort-results/.*$")
+                .excludeRegex("^/notebooks/.*$")
                 .excludeRegex("^/notebook-results/.*$")
+                .excludeRegex("^/storage-logs/.*$")
+                .excludeRegex("^/file/.*$")
                 .excludePath("/")
-                //.excludePath("/test")
                 .excludePath("/index.html");
     }
 
