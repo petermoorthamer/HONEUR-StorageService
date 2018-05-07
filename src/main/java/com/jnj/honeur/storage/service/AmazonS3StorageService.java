@@ -67,6 +67,7 @@ public class AmazonS3StorageService extends StorageService {
 
     @Override
     public void deleteStorageFile(String fileKey) throws StorageException {
+        LOGGER.info("deleteStorageFile with key: " + fileKey);
         try {
             amazonS3Service.deleteObject(bucketName, fileKey);
         } catch (AmazonServiceException e) {

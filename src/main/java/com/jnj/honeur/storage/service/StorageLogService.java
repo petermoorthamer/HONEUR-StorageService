@@ -1,5 +1,6 @@
 package com.jnj.honeur.storage.service;
 
+import com.jnj.honeur.storage.model.AbstractStorageFile;
 import com.jnj.honeur.storage.model.StorageLogEntry;
 import com.jnj.honeur.storage.repository.StorageLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,12 @@ public class StorageLogService {
 
     public List<StorageLogEntry> findByCriteria(final StorageLogEntry probe) {
         return storageLogRepository.findAll(Example.of(probe));
+    }
+
+    public List<StorageLogEntry> findStorageLog(final Class<? extends AbstractStorageFile> clazz, final String uuid) {
+        final StorageLogEntry probe = StorageLogEntry.createProbe(clazz);
+        probe.setStorageFileUuid(uuid);
+        return findByCriteria(probe);
     }
 
     public void save(final StorageLogEntry storageLogEntry) {

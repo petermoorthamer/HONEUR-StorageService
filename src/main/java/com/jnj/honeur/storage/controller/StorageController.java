@@ -17,6 +17,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -204,6 +205,20 @@ public class StorageController {
         }
     }
 
+    @ApiOperation(value = "Deletes the file with the given UUID", response = ResponseEntity.class)
+    @DeleteMapping(value = "/file/{uuid}")
+    public ResponseEntity<Object> deleteStorageFile(@PathVariable String uuid)  {
+        try {
+            final StorageFileInfo storageFileInfo = storageService.getStorageFileInfoByUuid(uuid);
+            storageService.deleteStorageFile(storageFileInfo.getKey());
+            logStorageAction(StorageLogEntry.Action.DELETE, storageFileInfo.getKey());
+            return ResponseEntity.noContent().build();
+        } catch (StorageException e) {
+            LOGGER.error(e.getMessage(), e);
+            return new ResponseEntity<>("The file cannot be deleted!", new HttpHeaders(), HttpStatus.NOT_FOUND);
+        }
+    }
+
     //@RequiresAuthentication
     @ApiOperation(value = "Stores a cohort definition file and assigns a UUID to it", response = ResponseEntity.class)
     @PostMapping("/cohort-definitions")
@@ -352,7 +367,11 @@ public class StorageController {
         logStorageAction(StorageLogEntry.Action.UPLOAD, notebookFile);
 
         // Send email
-        mailService.sendNewNotebookMail(serverName + buildPath("/notebooks", notebookFile.getStudyId(), notebookFile.getUuid()));
+        try {
+            mailService.sendNewNotebookMail(serverName + buildPath("/notebooks", notebookFile.getStudyId(), notebookFile.getUuid()));
+        } catch (MailException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
 
         return notebookUuid;
     }
@@ -480,6 +499,20 @@ public class StorageController {
             LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>("The list of notebooks cannot be retrieved!", new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @ApiOperation(value = "Returns the storage log for the notebook with the given UUID", response = ResponseEntity.class)
+    @RequestMapping(value = "/storage-logs/notebook/{notebookUuid}", method = RequestMethod.GET)
+    public ResponseEntity<Object> getNotebookStorageLog(@PathVariable String notebookUuid) {
+        final List<StorageLogEntry> storageLogs = storageLogService.findStorageLog(NotebookFile.class, notebookUuid);
+        return new ResponseEntity<>(storageLogs, HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Returns the storage log for the notebook result with the given UUID", response = ResponseEntity.class)
+    @RequestMapping(value = "/storage-logs/notebook-result/{notebookResultUuid}", method = RequestMethod.GET)
+    public ResponseEntity<Object> getNotebookResultStorageLog(@PathVariable String notebookResultUuid) {
+        final List<StorageLogEntry> storageLogs = storageLogService.findStorageLog(NotebookResultsFile.class, notebookResultUuid);
+        return new ResponseEntity<>(storageLogs, HttpStatus.OK);
     }
 
     private URI buildURI(String... pathParts) {
